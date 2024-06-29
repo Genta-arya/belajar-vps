@@ -1,0 +1,21 @@
+{
+  "name": "express-json-example",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Simple Express application returning JSON",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon --experimental-specifier-resolution=node --experimental-modules index.js"
+  },
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "init": "^0.1.2",
+    "joi": "^17.13.3",
+    "mysql2": "^3.10.1",
+    "nodemon": "^3.1.4"
+  },
+  "author": "Your Name",
+  "license": "MIT"
+}
