@@ -1,6 +1,7 @@
-import bcrypt from "bcrypt";
-import Joi from "joi";
-import { pool } from "../../../Config/Databases/db.js";
+import bcrypt from 'bcrypt';
+import Joi from 'joi';
+import prisma from '../../../Config/Prisma.js';
+
 
 export const HandleRegister = async (req, res) => {
   const schema = Joi.object({
@@ -15,55 +16,63 @@ export const HandleRegister = async (req, res) => {
     return res.status(400).json({ message: error.details[0].message });
   }
 
-  pool.query('SELECT * FROM Auth WHERE email = ?', [email], async (err, rows) => {
-    if (err) {
-      console.log(err);
-      return res.status(500).json({ message: "Internal Server Error" });
+  try {
+    // Check if email already exists
+    const existingUser = await prisma.auth.findUnique({
+      where: { email },
+    });
+
+    if (existingUser) {
+      return res.status(400).json({ message: 'Email telah digunakan', status: 400 });
     }
 
-    if (rows.length > 0) {
-      return res.status(400).json({ message: "Email telah digunakan", status: 400 });
-    }
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    try {
-      const hashedPassword = await bcrypt.hash(password, 10);
-      pool.query('INSERT INTO auth (email, password) VALUES (?, ?)', [email, hashedPassword], (err, result) => {
-        if (err) {
-          console.log(err);
-          return res.status(500).json({ message: "Internal Server Error" });
-        }
+    // Create a new user
+    const newUser = await prisma.auth.create({
+      data: {
+        email,
+        password: hashedPassword,
+      },
+    });
 
-        const userResponse = {
-          id: result.insertId,
-          email,
-        };
+    const userResponse = {
+      id: newUser.id,
+      email: newUser.email,
+    };
 
-        res.status(201).json({ data: userResponse, message: "created succes", status: 201 });
-      });
-    } catch (err) {
-      console.log(err);
-      res.status(500).json({ message: "Internal Server Error" });
-    }
-  });
+    res.status(201).json({ data: userResponse, message: 'Created successfully', status: 201 });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
 };
 
 export const getUser = async (req, res) => {
-  pool.query('SELECT id, email, token FROM Auth', (err, rows) => {
-    if (err) {
-      console.log(err);
-      return res.status(500).json({ message: "Internal Server Error" });
-    }
+  try {
+    // Fetch all users
+    const users = await prisma.auth.findMany({
+      select: {
+        id: true,
+        email: true,
+        token: true,
+      },
+    });
 
-    if (rows.length === 0) {
+    if (users.length === 0) {
       return res.status(200).json({
-        data: rows,
-        message: "Data masih kosong",
+        data: users,
+        message: 'Data masih kosong',
       });
     }
 
     res.status(200).json({
-      data: rows,
-      message: "Data berhasil diambil",
+      data: users,
+      message: 'Data berhasil diambil',
     });
-  });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
 };
