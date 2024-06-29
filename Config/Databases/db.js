@@ -1,4 +1,4 @@
-import mysql from "mysql2/promise";
+import mysql from "mysql";
 
 export const pool = mysql.createPool({
     host: 'afyung.shop',
@@ -10,7 +10,4 @@ export const pool = mysql.createPool({
     connectionLimit: 10,
     queueLimit: 0,
     connectTimeout: 10000 
-    
-
-  });
-  
+});
