@@ -14,19 +14,21 @@ import {
   deleteMediaFromGallery,
 } from "../../controllers/gallery/Delete/GalleryDelete.js";
 import { getDataGallery } from "../../controllers/gallery/Get/GalleryData.js";
+import { checkTotalSize } from "../../../Config/Multer.js";
 
 const routerGallery = express.Router();
 
 // Rute untuk mengunggah gambar
-routerGallery.post("/post", uploadMultiple, uploadDataGallery);
+routerGallery.post("/post", uploadMultiple, checkTotalSize, uploadDataGallery);
 
 // edit for post new media
-routerGallery.put("/edit/:id", uploadMultiple, editDataGallery);
+routerGallery.put("/edit/:id", uploadMultiple, checkTotalSize, editDataGallery);
 
 // edit single media
 routerGallery.put(
   "/edit/:galleryId/media/:mediaId",
   uploadSingle,
+  checkTotalSize,
   editMediaInGallery
 );
 
