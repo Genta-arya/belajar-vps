@@ -1,8 +1,6 @@
 import express from "express";
-import {
-  HandleRegister,
-  getUser,
-} from "../../controllers/Auth/AuthController.js";
+import { HandleRegister } from "../../controllers/Auth/Post/AuthPost.js";
+import { getUser } from "../../controllers/Auth/Get/AuthGet.js";
 
 const AuthRouters = express.Router();
 
