@@ -13,7 +13,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 model Auth {
   id        Int      @id @default(autoincrement())
   email     String   @unique
@@ -23,13 +22,20 @@ model Auth {
   updatedAt DateTime @updatedAt
 }
 
-
-
-
 model Gallery {
-  id    Int    @id @default(autoincrement()) 
-  name  String 
-  image String 
-  createdAt DateTime @default(now()) 
-  updatedAt DateTime @updatedAt 
+  id        Int         @id @default(autoincrement()) // ID utama yang auto-increment
+  name      String // Nama dari item gallery
+  media     DataMedia[] @relation("GalleryMedia") // Relasi banyak-ke-banyak dengan DataMedia
+  createdAt DateTime    @default(now()) // Waktu pembuatan otomatis
+  updatedAt DateTime    @updatedAt // Waktu pembaruan otomatis
+}
+
+model DataMedia {
+  id        Int       @id @default(autoincrement()) // ID utama yang auto-increment
+  filename  String // Nama file media
+  mimetype  String // Tipe MIME dari file
+  path      String // Path file di server
+  createdAt DateTime  @default(now()) // Waktu pembuatan otomatis
+  updatedAt DateTime  @updatedAt // Waktu pembaruan otomatis
+  gallery   Gallery[] @relation("GalleryMedia") // Relasi banyak-ke-banyak dengan Gallery
 }

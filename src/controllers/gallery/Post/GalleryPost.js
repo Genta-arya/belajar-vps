@@ -1,0 +1,60 @@
+import { schemaMediPost } from "../../../../Schema/Joi";
+
+
+import fs from "fs";
+import path from "path";
+import prisma from "../../../../Config/Prisma";
+
+export const uploadDataGallery = async (req, res) => {
+  // Validasi input
+  const { error } = schemaMediPost.validate({
+    name: req.body.name,
+    images: req.files ? req.files.map((file) => file.filename) : [],
+  });
+
+  if (error) {
+    // Hapus file yang telah diupload jika validasi gagal
+    if (req.files) {
+      req.files.forEach((file) =>
+        fs.unlinkSync(path.join("uploads", file.filename))
+      );
+    }
+    return res.status(400).json({ error: error.details[0].message });
+  }
+
+  try {
+    const { name } = req.body;
+    const images = req.files ? req.files.map((file) => file.filename) : [];
+
+    // Menyimpan data media untuk setiap file
+    const mediaItems = await Promise.all(
+      images.map((image) =>
+        prisma.dataMedia.create({
+          data: {
+            filename: image,
+            mimetype: "image/jpeg",
+            path: `uploads/${image}`,
+          },
+        })
+      )
+    );
+
+    // Menyimpan entri gallery dengan relasi ke semua media
+    const newGalleryItem = await prisma.gallery.create({
+      data: {
+        name,
+        media: {
+          connect: mediaItems.map((media) => ({ id: media.id })),
+        },
+      },
+    });
+
+    res.status(201).json({
+      message: "Images uploaded successfully!",
+      data: newGalleryItem,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
