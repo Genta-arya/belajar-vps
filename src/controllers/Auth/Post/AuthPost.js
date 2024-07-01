@@ -1,5 +1,5 @@
-import prisma from "../../../../Config/Prisma";
-import { schemaAuth } from "../../../../Schema/Joi";
+import prisma from "../../../../Config/Prisma.js";
+import { schemaAuth } from "../../../../Schema/Joi.js";
 import bcrypt from 'bcryptjs'; 
 export const HandleRegister = async (req, res) => {
   // Membuat schema validasi dengan Joi

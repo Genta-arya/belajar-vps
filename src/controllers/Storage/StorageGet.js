@@ -2,7 +2,7 @@
 import express from "express";
 
 import path from "path";
-import { getStorageInfo } from "../../../utils/Storage/Storage";
+import { getStorageInfo } from "../../../utils/Storage/Storage.js";
 
 const router = express.Router();
 

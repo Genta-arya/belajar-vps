@@ -1,5 +1,5 @@
-import prisma from "../../../../Config/Prisma";
-import { idSchema } from "../../../../Schema/Joi";
+import prisma from "../../../../Config/Prisma.js";
+import { idSchema } from "../../../../Schema/Joi.js";
 import path from "path";
 import fs from "fs";
 export const deleteDataGallery = async (req, res) => {

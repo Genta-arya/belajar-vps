@@ -1,4 +1,4 @@
-import prisma from "../../../../Config/Prisma";
+import prisma from "../../../../Config/Prisma.js";
 
 export const getUser = async (req, res) => {
   try {
