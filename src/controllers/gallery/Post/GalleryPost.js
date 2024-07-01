@@ -1,9 +1,8 @@
-import { schemaMediPost } from "../../../../Schema/Joi";
-
+import { schemaMediPost } from "../../../../Schema/Joi.js";
 
 import fs from "fs";
 import path from "path";
-import prisma from "../../../../Config/Prisma";
+import prisma from "../../../../Config/Prisma.js";
 
 export const uploadDataGallery = async (req, res) => {
   // Validasi input

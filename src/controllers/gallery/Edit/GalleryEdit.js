@@ -1,6 +1,6 @@
 import fs from "fs";
-import { idSchema, mediaSchema, schemaMediPost } from "../../../../Schema/Joi";
-import prisma from "../../../../Config/Prisma";
+import { idSchema, mediaSchema, schemaMediPost } from "../../../../Schema/Joi.js";
+import prisma from "../../../../Config/Prisma.js";
 import path from "path";
 export const editDataGallery = async (req, res) => {
   const { id } = req.params;
