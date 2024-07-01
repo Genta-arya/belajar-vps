@@ -1,7 +1,7 @@
 import { schemaMediPost } from "../../../../Schema/Joi.js";
-
 import fs from "fs";
 import path from "path";
+import bcrypt from "bcryptjs";
 import prisma from "../../../../Config/Prisma.js";
 
 export const uploadDataGallery = async (req, res) => {
@@ -9,6 +9,7 @@ export const uploadDataGallery = async (req, res) => {
   const { error } = schemaMediPost.validate({
     name: req.body.name,
     images: req.files ? req.files.map((file) => file.filename) : [],
+    password: req.body.password,  // Add password to validation
   });
 
   if (error) {
@@ -22,8 +23,15 @@ export const uploadDataGallery = async (req, res) => {
   }
 
   try {
-    const { name } = req.body;
+    const { name, password } = req.body;
     const images = req.files ? req.files.map((file) => file.filename) : [];
+    
+    let hashedPassword = null;
+    if (password) {
+      // Hash the password
+      const salt = await bcrypt.genSalt(10);
+      hashedPassword = await bcrypt.hash(password, salt);
+    }
 
     // Menyimpan data media untuk setiap file
     const mediaItems = await Promise.all(
@@ -42,6 +50,7 @@ export const uploadDataGallery = async (req, res) => {
     const newGalleryItem = await prisma.gallery.create({
       data: {
         name,
+        password: hashedPassword,  // Save hashed password if provided
         media: {
           connect: mediaItems.map((media) => ({ id: media.id })),
         },

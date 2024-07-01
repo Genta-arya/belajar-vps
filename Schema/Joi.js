@@ -3,6 +3,7 @@ import Joi from "joi";
 export const schemaMediPost = Joi.object({
   name: Joi.string().required(), // Nama harus diisi
   images: Joi.array().items(Joi.string()).optional(), // Daftar nama file gambar opsional
+  password: Joi.string().optional().allow(null, ""),
 });
 export const idSchema = Joi.number().integer().positive().required();
 export const mediaSchema = Joi.object({

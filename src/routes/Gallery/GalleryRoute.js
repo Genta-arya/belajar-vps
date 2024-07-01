@@ -42,6 +42,6 @@ routerGallery.delete("/delete/:id", deleteDataGallery);
 
 // get all data gallery
 routerGallery.get("/data", getDataGallery);
-routerGallery.get("/data/:id", getGalleryById);
+routerGallery.post("/data/:id", getGalleryById);
 
 export default routerGallery;

@@ -1,30 +1,23 @@
 import prisma from "../../../../Config/Prisma.js";
+import bcrypt from "bcryptjs";
 
 export const getDataGallery = async (req, res) => {
   try {
     // Mengambil data gallery dengan data media yang terkait
     const dataGallery = await prisma.gallery.findMany({
       include: {
-        media: true, // Menyertakan data media terkait
+        media: false, // Menyertakan data media terkait
       },
     });
 
     const baseUrl = `http://${req.headers.host}/uploads/`;
 
     // Memformat data dengan URL gambar dan detail media
-    const dataWithUrls = dataGallery.map((item) => ({
-      ...item,
-      media: item.media.map((mediaItem) => ({
-        id: mediaItem.id,
-        filename: mediaItem.filename,
-        mimetype: mediaItem.mimetype,
-        url: `${baseUrl}${mediaItem.filename}`, // Menyertakan URL gambar
-      })),
-    }));
+    
 
     res.status(200).json({
       message: "Data Gallery",
-      data: dataWithUrls,
+      data: dataGallery,
     });
   } catch (error) {
     console.error(error);
@@ -33,9 +26,12 @@ export const getDataGallery = async (req, res) => {
 };
 
 
+
+
 export const getGalleryById = async (req, res) => {
   try {
     const { id } = req.params; // Mengambil ID dari parameter URL
+    const { password } = req.body; // Mengambil password dari body permintaan
 
     // Mengambil data gallery dengan ID dan media yang terkait
     const dataGallery = await prisma.gallery.findUnique({
@@ -48,6 +44,19 @@ export const getGalleryById = async (req, res) => {
     // Jika tidak ada data dengan ID tersebut
     if (!dataGallery) {
       return res.status(404).json({ error: "Gallery not found" });
+    }
+
+    // Jika password di database tidak null, maka password dari body harus ada
+    if (dataGallery.password) {
+      if (!password) {
+        return res.status(401).json({ error: "Password is required" });
+      }
+
+      // Memverifikasi password
+      const isMatch = await bcrypt.compare(password, dataGallery.password);
+      if (!isMatch) {
+        return res.status(403).json({ error: "Invalid password" });
+      }
     }
 
     const baseUrl = `http://${req.headers.host}/uploads/`;

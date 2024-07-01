@@ -25,6 +25,7 @@ model Auth {
 model Gallery {
   id        Int         @id @default(autoincrement()) // ID utama yang auto-increment
   name      String // Nama dari item gallery
+  password  String?
   media     DataMedia[] @relation("GalleryMedia") // Relasi banyak-ke-banyak dengan DataMedia
   createdAt DateTime    @default(now()) // Waktu pembuatan otomatis
   updatedAt DateTime    @updatedAt // Waktu pembaruan otomatis
