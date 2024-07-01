@@ -13,7 +13,7 @@ import {
   deleteDataGallery,
   deleteMediaFromGallery,
 } from "../../controllers/gallery/Delete/GalleryDelete.js";
-import { getDataGallery } from "../../controllers/gallery/Get/GalleryData.js";
+import { getDataGallery, getGalleryById } from "../../controllers/gallery/Get/GalleryData.js";
 import { checkTotalSize } from "../../../Config/Multer.js";
 
 const routerGallery = express.Router();
@@ -42,5 +42,6 @@ routerGallery.delete("/delete/:id", deleteDataGallery);
 
 // get all data gallery
 routerGallery.get("/data", getDataGallery);
+routerGallery.get("/data/:id", getGalleryById);
 
 export default routerGallery;

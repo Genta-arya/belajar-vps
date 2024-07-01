@@ -1,7 +1,7 @@
-// Multer.js
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import { v4 as uuidv4 } from 'uuid';
 
 // Setup penyimpanan Multer
 const storage = multer.diskStorage({
@@ -9,7 +9,9 @@ const storage = multer.diskStorage({
     cb(null, 'uploads'); // Folder penyimpanan file
   },
   filename: (req, file, cb) => {
-    cb(null, file.originalname); // Nama file
+    // Tambahkan UUID ke nama file untuk memastikan unik
+    const uniqueSuffix = uuidv4() + path.extname(file.originalname);
+    cb(null, `${Date.now()}-${uniqueSuffix}`); // Nama file
   },
 });
 

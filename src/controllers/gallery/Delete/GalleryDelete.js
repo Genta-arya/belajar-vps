@@ -1,6 +1,7 @@
 import prisma from "../../../../Config/Prisma";
 import { idSchema } from "../../../../Schema/Joi";
 import path from "path";
+import fs from "fs";
 export const deleteDataGallery = async (req, res) => {
   const { id } = req.params;
 

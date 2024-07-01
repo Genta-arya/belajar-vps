@@ -1,7 +1,11 @@
 import fs from "fs";
-import { idSchema, mediaSchema, schemaMediPost } from "../../../../Schema/Joi";
+
+import path from 'path';
+
+import { idSchema , schemaMediPost} from "../../../../Schema/Joi";
+
 import prisma from "../../../../Config/Prisma";
-import path from "path";
+
 export const editDataGallery = async (req, res) => {
   const { id } = req.params;
 
@@ -59,8 +63,8 @@ export const editDataGallery = async (req, res) => {
       },
     });
 
-    // Tambah gambar baru ke DataMedia dan hubungkan ke Gallery
-    if (req.files) {
+    // Tambah gambar baru ke DataMedia dan hubungkan ke Gallery jika ada file
+    if (req.files && req.files.length > 0) {
       for (const file of req.files) {
         // Buat entri baru di DataMedia
         const newMedia = await prisma.dataMedia.create({
