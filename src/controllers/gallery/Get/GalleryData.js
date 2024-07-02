@@ -59,7 +59,7 @@ export const getGalleryById = async (req, res) => {
       }
     }
 
-    const baseUrl = `http://${req.headers.host}/uploads/`;
+    const baseUrl = `https://${req.headers.host}/uploads/`;
 
     // Memformat data dengan URL gambar dan detail media
     const dataWithUrls = {
