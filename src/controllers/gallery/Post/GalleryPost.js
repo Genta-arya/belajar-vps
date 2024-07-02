@@ -3,6 +3,7 @@ import fs from "fs";
 import path from "path";
 import bcrypt from "bcryptjs";
 import prisma from "../../../../Config/Prisma.js";
+
 export const uploadDataGallery = async (req, res) => {
   // Validasi input
   const { error } = schemaMediPost.validate({
@@ -40,7 +41,7 @@ export const uploadDataGallery = async (req, res) => {
         prisma.dataMedia.create({
           data: {
             filename: image,
-            mimetype: "image/jpeg",
+            mimetype: image.mimetype,
             path: `uploads/${image}`,
           },
         })
