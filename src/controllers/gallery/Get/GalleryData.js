@@ -5,15 +5,18 @@ export const getDataGallery = async (req, res) => {
   try {
     // Mengambil data gallery dengan data media yang terkait
     const dataGallery = await prisma.gallery.findMany({
-      include: {
-        media: false, // Menyertakan data media terkait
+      select: {
+        id: true,
+        name: true,
+        createdAt: true,
+        updatedAt: true,
+        isPassword: true,
       },
     });
 
     const baseUrl = `http://${req.headers.host}/uploads/`;
 
     // Memformat data dengan URL gambar dan detail media
-    
 
     res.status(200).json({
       message: "Data Gallery",
@@ -24,9 +27,6 @@ export const getDataGallery = async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
-
-
-
 
 export const getGalleryById = async (req, res) => {
   try {

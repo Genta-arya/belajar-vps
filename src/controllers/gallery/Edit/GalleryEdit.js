@@ -1,7 +1,12 @@
 import fs from "fs";
-import { idSchema, mediaSchema, schemaMediPost } from "../../../../Schema/Joi.js";
+import {
+  idSchema,
+  mediaSchema,
+  schemaMediPost,
+} from "../../../../Schema/Joi.js";
 import prisma from "../../../../Config/Prisma.js";
 import path from "path";
+import bcrypt from "bcryptjs";
 export const editDataGallery = async (req, res) => {
   const { id } = req.params;
 
@@ -20,6 +25,7 @@ export const editDataGallery = async (req, res) => {
   // Validasi input dari body
   const { error: inputError } = schemaMediPost.validate({
     name: req.body.name,
+    password: req.body.password, // Validasi password jika ada
   });
 
   if (inputError) {
@@ -51,11 +57,26 @@ export const editDataGallery = async (req, res) => {
       return res.status(404).json({ error: "Gallery item not found" });
     }
 
-    // Update nama gallery jika ada di body
+    // Hash password jika ada
+    let hashedPassword = galleryItem.password;
+    let isPasswordFlag = galleryItem.isPassword;
+
+    if (req.body.password) {
+      const saltRounds = 10; // Jumlah putaran salt untuk bcrypt
+      hashedPassword = await bcrypt.hash(req.body.password, saltRounds);
+      isPasswordFlag = true; // Set isPassword ke true jika ada password
+    } else {
+      // Jika tidak ada password baru, set isPassword ke false
+      isPasswordFlag = false;
+    }
+
+    // Update nama gallery dan password jika ada di body
     const updatedGalleryItem = await prisma.gallery.update({
       where: { id: parseInt(id) },
       data: {
         name: req.body.name || galleryItem.name, // Pertahankan nama lama jika tidak diubah
+        password: hashedPassword, // Update password jika ada
+        isPassword: isPasswordFlag, // Set flag isPassword berdasarkan apakah ada password
       },
     });
 

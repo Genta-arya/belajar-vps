@@ -9,7 +9,7 @@ export const uploadDataGallery = async (req, res) => {
   const { error } = schemaMediPost.validate({
     name: req.body.name,
     images: req.files ? req.files.map((file) => file.filename) : [],
-    password: req.body.password,  // Add password to validation
+    password: req.body.password, // Menambahkan password ke validasi
   });
 
   if (error) {
@@ -25,12 +25,14 @@ export const uploadDataGallery = async (req, res) => {
   try {
     const { name, password } = req.body;
     const images = req.files ? req.files.map((file) => file.filename) : [];
-    
+
     let hashedPassword = null;
+    let isPassword = false;
     if (password) {
       // Hash the password
       const salt = await bcrypt.genSalt(10);
       hashedPassword = await bcrypt.hash(password, salt);
+      isPassword = true; // Set isPassword to true if password is provided
     }
 
     // Menyimpan data media untuk setiap file
@@ -50,7 +52,8 @@ export const uploadDataGallery = async (req, res) => {
     const newGalleryItem = await prisma.gallery.create({
       data: {
         name,
-        password: hashedPassword,  // Save hashed password if provided
+        password: hashedPassword, // Menyimpan hashed password jika disediakan
+        isPassword, // Menyimpan status isPassword
         media: {
           connect: mediaItems.map((media) => ({ id: media.id })),
         },

@@ -60,7 +60,6 @@ export const HandleRegister = async (req, res) => {
 
 // Secret key for JWT
 const JWT_SECRET = "paraboy"; // Replace with your actual secret
-
 export const handleLogin = async (req, res) => {
   // Validasi input dari body menggunakan schema
   const { error } = schemaAuth.validate(req.body);
@@ -90,18 +89,23 @@ export const handleLogin = async (req, res) => {
       return res.status(401).json({ message: "Email atau password salah" });
     }
 
-    // Generate JWT token
-    const token = jwt.sign(
-      { id: user.id, email: user.email }, // Payload
-      JWT_SECRET, // Secret key
-      { expiresIn: "1h" } // Options
-    );
+    // Cek apakah token sudah ada di database
+    let token = user.token;
 
-    // Simpan token di database (optional)
-    await prisma.auth.update({
-      where: { email },
-      data: { token }, // Assuming your schema has a token field
-    });
+    if (!token) {
+      // Generate JWT token
+
+      token = jwt.sign(
+        { id: user.id, email: user.email }, // Payload
+        JWT_SECRET, // Secret key
+        { expiresIn: "3d" } // Options
+      );
+      // Simpan token di database
+      await prisma.auth.update({
+        where: { email },
+        data: { token }, // Assuming your schema has a token field
+      });
+    }
 
     // Kembalikan respons dengan token dan email
     res.status(200).json({
@@ -109,7 +113,7 @@ export const handleLogin = async (req, res) => {
       data: {
         id: user.id,
         email: user.email, // Mengembalikan email pengguna
-        token: user.token, // Mengembalikan token JWT
+        token, // Mengembalikan token JWT
       },
     });
   } catch (err) {
@@ -127,12 +131,9 @@ export const checkLogin = async (req, res) => {
   }
 
   try {
-    // Verify and decode the token
-    const decoded = jwt.verify(token, JWT_SECRET);
-
     // Fetch user data based on the decoded token
-    const user = await prisma.auth.findUnique({
-      where: { id: decoded.id },
+    const user = await prisma.auth.findFirst({
+      where: { token: token },
     });
 
     if (!user) {
@@ -161,5 +162,35 @@ export const checkLogin = async (req, res) => {
     // Handle other errors
     console.error(err);
     res.status(500).json({ message: "Internal Server Error." });
+  }
+};
+
+export const Logout = async (req, res) => {
+  try {
+    const { token } = req.body;
+
+    if (!token) {
+      return res.status(400).json({ message: "Token is required" });
+    }
+
+    // Cari pengguna berdasarkan token
+    const user = await prisma.auth.findFirst({
+      where: token,
+    });
+
+    if (!user) {
+      return res.status(401).json({ message: "Invalid token" });
+    }
+
+    // Hapus token dari database
+    await prisma.auth.update({
+      where: { id: user.id },
+      data: { token: null },
+    });
+
+    res.status(200).json({ message: "Logout successful" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 };

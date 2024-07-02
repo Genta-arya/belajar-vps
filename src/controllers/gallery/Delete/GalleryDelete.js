@@ -1,9 +1,13 @@
 import prisma from "../../../../Config/Prisma.js";
 import { idSchema } from "../../../../Schema/Joi.js";
 import path from "path";
+import bycrypt from "bcryptjs"
 import fs from "fs";
 export const deleteDataGallery = async (req, res) => {
   const { id } = req.params;
+  const { password } = req.body;
+
+  console.log(password)
 
   // Validasi ID
   const { error: idError } = idSchema.validate(parseInt(id));
@@ -20,6 +24,23 @@ export const deleteDataGallery = async (req, res) => {
 
     if (!galleryItem) {
       return res.status(404).json({ error: "Gallery item not found" });
+    }
+
+    // Jika galeri memiliki password, lakukan validasi password
+    if (galleryItem.password) {
+      if (!password) {
+        return res
+          .status(400)
+          .json({ error: "Password is required to delete this gallery item." });
+      }
+
+      const isPasswordValid = await bycrypt.compare(
+        password,
+        galleryItem.password
+      );
+      if (!isPasswordValid) {
+        return res.status(403).json({ error: "Invalid password" });
+      }
     }
 
     // Hapus media dari gallery dan hapus file media dari server

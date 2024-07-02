@@ -13,22 +13,38 @@ import {
   deleteDataGallery,
   deleteMediaFromGallery,
 } from "../../controllers/gallery/Delete/GalleryDelete.js";
-import { getDataGallery, getGalleryById } from "../../controllers/gallery/Get/GalleryData.js";
-import { checkTotalSize } from "../../../Config/Multer.js";
+import {
+  getDataGallery,
+  getGalleryById,
+} from "../../controllers/gallery/Get/GalleryData.js";
+import { checkTotalSize, handleMulterErrors } from "../../../Config/Multer.js";
 
 const routerGallery = express.Router();
 
 // Rute untuk mengunggah gambar
-routerGallery.post("/post", uploadMultiple, checkTotalSize, uploadDataGallery);
+routerGallery.post(
+  "/post",
+  uploadMultiple,
+  checkTotalSize,
+  handleMulterErrors,
+  uploadDataGallery
+);
 
 // edit for post new media
-routerGallery.put("/edit/:id", uploadMultiple, checkTotalSize, editDataGallery);
+routerGallery.put(
+  "/edit/:id",
+  uploadMultiple,
+  checkTotalSize,
+  handleMulterErrors,
+  editDataGallery
+);
 
 // edit single media
 routerGallery.put(
   "/edit/:galleryId/media/:mediaId",
   uploadSingle,
   checkTotalSize,
+  handleMulterErrors,
   editMediaInGallery
 );
 
@@ -38,7 +54,7 @@ routerGallery.delete(
   deleteMediaFromGallery
 );
 // delete single gallery
-routerGallery.delete("/delete/:id", deleteDataGallery);
+routerGallery.post("/delete/:id", deleteDataGallery);
 
 // get all data gallery
 routerGallery.get("/data", getDataGallery);
