@@ -52,7 +52,7 @@ export const uploadDataGallery = async (req, res) => {
       let newName = baseName;
       let count = 1;
       while (true) {
-        const existingItem = await prisma.gallery.findUnique({
+        const existingItem = await prisma.gallery.findFirst({
           where: { name: newName },
         });
         if (!existingItem) return newName;
