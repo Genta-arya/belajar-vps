@@ -9,14 +9,13 @@ const storage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     // Ambil nama file asli dan ubah spasi menjadi tanda hubung
-    const originalName = path.basename(
-      file.originalname,
-      path.extname(file.originalname)
-    );
-    const sanitizedFileName =
-      originalName.replace(/\s+/g, "-") +
-      path.extname(file.originalname).toLowerCase();
-    cb(null, `${sanitizedFileName}`); // Nama file
+    const originalName = path
+      .basename(file.originalname, path.extname(file.originalname))
+      .replace(/\s+/g, "-");
+    // Tambahkan timestamp sebelum ekstensi file
+    const timestamp = Date.now();
+    const extension = path.extname(file.originalname).toLowerCase();
+    cb(null, `${originalName}-${timestamp}${extension}`); // Nama file
   },
 });
 
