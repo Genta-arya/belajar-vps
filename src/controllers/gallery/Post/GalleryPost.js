@@ -24,7 +24,12 @@ export const uploadDataGallery = async (req, res) => {
 
   try {
     const { name, password } = req.body;
-    const images = req.files ? req.files.map((file) => file.filename) : [];
+    const images = req.files
+      ? req.files.map((file) => ({
+          filename: file.filename,
+          mimetype: file.mimetype,
+        }))
+      : [];
 
     // Hash password jika diberikan
     let hashedPassword = null;
@@ -37,15 +42,16 @@ export const uploadDataGallery = async (req, res) => {
 
     // Menyimpan data media untuk setiap file
     const mediaItems = await Promise.all(
-      images.map((image) =>
-        prisma.dataMedia.create({
+      images.map((image) => {
+        console.log(image); // Log data image
+        return prisma.dataMedia.create({
           data: {
-            filename: image,
+            filename: image.filename,
             mimetype: image.mimetype,
-            path: `uploads/${image}`,
+            path: `uploads/${image.filename}`,
           },
-        })
-      )
+        });
+      })
     );
 
     // Fungsi untuk membuat nama unik
