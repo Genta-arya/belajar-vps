@@ -57,6 +57,20 @@ export const editDataGallery = async (req, res) => {
       return res.status(404).json({ error: "Gallery item not found" });
     }
 
+    // Fungsi untuk membuat nama unik
+    const generateUniqueName = async (baseName) => {
+      let newName = baseName;
+      let count = 1;
+      while (true) {
+        const existingItem = await prisma.gallery.findUnique({
+          where: { name: newName },
+        });
+        if (!existingItem) return newName;
+        newName = `${baseName}(${count})`;
+        count += 1;
+      }
+    };
+
     // Hash password jika ada
     let hashedPassword = galleryItem.password;
     let isPasswordFlag = galleryItem.isPassword;
@@ -70,11 +84,16 @@ export const editDataGallery = async (req, res) => {
       isPasswordFlag = false;
     }
 
+    // Generate nama unik jika ada perubahan nama
+    const uniqueName = req.body.name
+      ? await generateUniqueName(req.body.name)
+      : galleryItem.name;
+
     // Update nama gallery dan password jika ada di body
     const updatedGalleryItem = await prisma.gallery.update({
       where: { id: parseInt(id) },
       data: {
-        name: req.body.name || galleryItem.name, // Pertahankan nama lama jika tidak diubah
+        name: uniqueName, // Gunakan nama unik
         password: hashedPassword, // Update password jika ada
         isPassword: isPasswordFlag, // Set flag isPassword berdasarkan apakah ada password
       },

@@ -3,7 +3,6 @@ import fs from "fs";
 import path from "path";
 import bcrypt from "bcryptjs";
 import prisma from "../../../../Config/Prisma.js";
-
 export const uploadDataGallery = async (req, res) => {
   // Validasi input
   const { error } = schemaMediPost.validate({
@@ -26,13 +25,13 @@ export const uploadDataGallery = async (req, res) => {
     const { name, password } = req.body;
     const images = req.files ? req.files.map((file) => file.filename) : [];
 
+    // Hash password jika diberikan
     let hashedPassword = null;
     let isPassword = false;
     if (password) {
-      // Hash the password
       const salt = await bcrypt.genSalt(10);
       hashedPassword = await bcrypt.hash(password, salt);
-      isPassword = true; // Set isPassword to true if password is provided
+      isPassword = true;
     }
 
     // Menyimpan data media untuk setiap file
@@ -48,10 +47,27 @@ export const uploadDataGallery = async (req, res) => {
       )
     );
 
+    // Fungsi untuk membuat nama unik
+    const generateUniqueName = async (baseName) => {
+      let newName = baseName;
+      let count = 1;
+      while (true) {
+        const existingItem = await prisma.gallery.findUnique({
+          where: { name: newName },
+        });
+        if (!existingItem) return newName;
+        newName = `${baseName}(${count})`;
+        count += 1;
+      }
+    };
+
+    // Generate nama unik
+    const uniqueName = await generateUniqueName(name);
+
     // Menyimpan entri gallery dengan relasi ke semua media
     const newGalleryItem = await prisma.gallery.create({
       data: {
-        name,
+        name: uniqueName,
         password: hashedPassword, // Menyimpan hashed password jika disediakan
         isPassword, // Menyimpan status isPassword
         media: {
