@@ -13,6 +13,6 @@ AuthRouters.post("/register", HandleRegister);
 AuthRouters.post("/login", handleLogin);
 AuthRouters.post("/logout", Logout);
 AuthRouters.post("/authentikasi", checkLogin);
-AuthRouters.get("/user", getUser);
+// AuthRouters.get("/user", getUser);
 
 export default AuthRouters;

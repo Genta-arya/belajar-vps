@@ -18,6 +18,7 @@ import {
   getGalleryById,
 } from "../../controllers/gallery/Get/GalleryData.js";
 import { checkTotalSize, handleMulterErrors } from "../../../Config/Multer.js";
+import { MidlewareApi } from "../../../Midleware/MidlewareApiAcces.js";
 
 const routerGallery = express.Router();
 
@@ -26,6 +27,7 @@ routerGallery.post(
   "/post",
   uploadMultiple,
   checkTotalSize,
+  MidlewareApi,
   handleMulterErrors,
   uploadDataGallery
 );
@@ -35,6 +37,7 @@ routerGallery.put(
   "/edit/:id",
   uploadMultiple,
   checkTotalSize,
+  MidlewareApi,
   handleMulterErrors,
   editDataGallery
 );
@@ -44,6 +47,7 @@ routerGallery.put(
   "/edit/:galleryId/media/:mediaId",
   uploadSingle,
   checkTotalSize,
+  MidlewareApi,
   handleMulterErrors,
   editMediaInGallery
 );
@@ -51,13 +55,14 @@ routerGallery.put(
 // delete single media
 routerGallery.delete(
   "/delete/:galleryId/media/:mediaId",
+  MidlewareApi,
   deleteMediaFromGallery
 );
 // delete single gallery
-routerGallery.post("/delete/:id", deleteDataGallery);
+routerGallery.post("/delete/:id",  MidlewareApi, deleteDataGallery);
 
 // get all data gallery
-routerGallery.get("/data", getDataGallery);
-routerGallery.post("/data/:id", getGalleryById);
+routerGallery.get("/data",   MidlewareApi,getDataGallery);
+routerGallery.post("/data/:id",  MidlewareApi, getGalleryById);
 
 export default routerGallery;
