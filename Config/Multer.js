@@ -1,7 +1,6 @@
 import multer from "multer";
 import path from "path";
 import fs from "fs";
-import { v4 as uuidv4 } from "uuid";
 
 // Setup penyimpanan Multer
 const storage = multer.diskStorage({
@@ -9,9 +8,15 @@ const storage = multer.diskStorage({
     cb(null, "uploads"); // Folder penyimpanan file
   },
   filename: (req, file, cb) => {
-    // Tambahkan UUID ke nama file untuk memastikan unik
-    const uniqueSuffix = uuidv4() + path.extname(file.originalname);
-    cb(null, `${Date.now()}-${uniqueSuffix}`); // Nama file
+    // Ambil nama file asli dan ubah spasi menjadi tanda hubung
+    const originalName = path.basename(
+      file.originalname,
+      path.extname(file.originalname)
+    );
+    const sanitizedFileName =
+      originalName.replace(/\s+/g, "-") +
+      path.extname(file.originalname).toLowerCase();
+    cb(null, `${sanitizedFileName}`); // Nama file
   },
 });
 

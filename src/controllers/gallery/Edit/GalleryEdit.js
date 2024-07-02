@@ -73,27 +73,26 @@ export const editDataGallery = async (req, res) => {
 
     // Hash password jika ada
     let hashedPassword = galleryItem.password;
-    let isPasswordFlag = galleryItem.isPassword;
+    let isPasswordFlag = galleryItem.isPassword; // Inisialisasi dengan nilai sebelumnya dari galleryItem
 
     if (req.body.password) {
       const saltRounds = 10; // Jumlah putaran salt untuk bcrypt
       hashedPassword = await bcrypt.hash(req.body.password, saltRounds);
       isPasswordFlag = true; // Set isPassword ke true jika ada password
-    } else {
-      // Jika tidak ada password baru, set isPassword ke false
-      isPasswordFlag = false;
     }
+    // Tidak perlu melakukan perubahan pada isPasswordFlag jika tidak ada password baru, biarkan tetap sama seperti sebelumnya
 
     // Generate nama unik jika ada perubahan nama
-    const uniqueName = req.body.name
-      ? await generateUniqueName(req.body.name)
-      : galleryItem.name;
+    let uniqueName = galleryItem.name; // Default ke nama yang ada saat ini
+    if (req.body.name && req.body.name !== galleryItem.name) {
+      uniqueName = await generateUniqueName(req.body.name);
+    }
 
     // Update nama gallery dan password jika ada di body
     const updatedGalleryItem = await prisma.gallery.update({
       where: { id: parseInt(id) },
       data: {
-        name: uniqueName, // Gunakan nama unik
+        name: uniqueName, // Gunakan nama unik jika diperlukan
         password: hashedPassword, // Update password jika ada
         isPassword: isPasswordFlag, // Set flag isPassword berdasarkan apakah ada password
       },
