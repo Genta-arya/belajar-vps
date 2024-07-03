@@ -14,10 +14,11 @@ export const getDataGallery = async (req, res) => {
       },
     });
 
-    const baseUrl = `http://${req.headers.host}/uploads/`;
+    // Menentukan protokol berdasarkan NODE_ENV
+    const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
+    const baseUrl = `${protocol}://${req.headers.host}/uploads/`;
 
     // Memformat data dengan URL gambar dan detail media
-
     res.status(200).json({
       message: "Data Gallery",
       data: dataGallery,
@@ -59,7 +60,9 @@ export const getGalleryById = async (req, res) => {
       }
     }
 
-    const baseUrl = `https://${req.headers.host}/uploads/`;
+    // Menentukan protokol berdasarkan NODE_ENV
+    const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
+    const baseUrl = `${protocol}://${req.headers.host}/uploads/`;
 
     // Memformat data dengan URL gambar dan detail media
     const dataWithUrls = {

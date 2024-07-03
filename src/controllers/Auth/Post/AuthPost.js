@@ -59,7 +59,7 @@ export const HandleRegister = async (req, res) => {
 };
 
 // Secret key for JWT
-const JWT_SECRET = "paraboy"; // Replace with your actual secret
+
 export const handleLogin = async (req, res) => {
   // Validasi input dari body menggunakan schema
   const { error } = schemaAuth.validate(req.body);
@@ -97,7 +97,7 @@ export const handleLogin = async (req, res) => {
 
       token = jwt.sign(
         { id: user.id, email: user.email }, // Payload
-        JWT_SECRET, // Secret key
+        process.env.JWT_SECRET, // Secret key
         { expiresIn: "3d" } // Options
       );
       // Simpan token di database
