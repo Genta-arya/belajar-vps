@@ -80,7 +80,7 @@ const authorizeUploads = async (req, res, next) => {
   }
 };
 
-app.use("/uploads", authorizeUploads, express.static(path.resolve("uploads")));
+app.use("/uploads",  express.static(path.resolve("uploads")));
 
 app.use("/api/v1/gallery", routerGallery);
 // Use AuthRouters for authentication routes
