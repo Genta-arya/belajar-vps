@@ -39,13 +39,24 @@ function decryptMessage(encryptedMessage) {
 }
 
 export const manageChat = (io) => {
-  // Function to reset the session
+  // Function to check and reset the session if necessary
+  function checkSessionExpiration() {
+    if (sessionEndTime && Date.now() >= sessionEndTime) {
+      io.emit("sessionExpired", "Session has expired");
+      resetSession(); // Optional: Clear session data if desired
+    } else if (sessionEndTime) {
+      const timeRemaining = Math.max(sessionEndTime - Date.now(), 0);
+      io.emit("timeRemaining", timeRemaining);
+    }
+  }
+
+  // Function to reset the session data
   function resetSession() {
     chatHistory.length = 0; // Clear chat history
     users.clear(); // Clear users
     usersWithUsername.clear(); // Clear usernames
     sessionEndTime = null; // Reset session end time
-    io.emit("chatHistory", chatHistory); // Notify clients
+    io.emit("chatHistory", []); // Notify clients with empty chat history
     io.emit("updateUsers", {
       users: [],
       count: 0,
@@ -149,6 +160,22 @@ export const manageChat = (io) => {
       console.log("Updated chat history:", chatHistory);
     });
 
+    // Handle user typing event
+    socket.on("typing", () => {
+      const username = users.get(socket.id);
+      if (username) {
+        socket.broadcast.emit("userTyping", username);
+      }
+    });
+
+    // Handle user stop typing event
+    socket.on("stopTyping", () => {
+      const username = users.get(socket.id);
+      if (username) {
+        socket.broadcast.emit("userStopTyping", username);
+      }
+    });
+
     // Handle user disconnect
     socket.on("disconnect", () => {
       console.log("User disconnected with socket ID:", socket.id);
@@ -171,28 +198,21 @@ export const manageChat = (io) => {
         io.emit("userLeft", username); // Send the username of the user who left
       }
 
-      // If no users are left, clear the session
-      if (users.size === 0) {
-        resetSession();
-      }
+      // Optionally check session expiration
+      checkSessionExpiration();
     });
 
     // Periodically check for session expiration
     setInterval(() => {
-      if (sessionEndTime && Date.now() >= sessionEndTime) {
-        io.emit("sessionExpired", "Session has expired");
-        resetSession();
-      } else if (sessionEndTime) {
-        const timeRemaining = Math.max(sessionEndTime - Date.now(), 0);
-        io.emit("timeRemaining", timeRemaining);
-      }
+      checkSessionExpiration();
     }, 1000); // Check every second
   });
 };
 
 // Controller function to handle HTTP requests for chat history
-// Controller function to handle HTTP requests for chat history
 export const getChatHistory = (req, res) => {
-  
-  res.json(chatHistory); // Return encrypted messages
+  res.json(chatHistory.map(message => ({
+    ...message,
+    message: decryptMessage(message.message), // Decrypt messages before sending to client
+  })));
 };
