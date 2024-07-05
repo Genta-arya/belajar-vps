@@ -20,7 +20,7 @@ export const manageChat = (io) => {
   }
 
   io.on("connection", (socket) => {
-    console.log("User connected with socket ID:", socket.id);
+   
 
     // Send existing chat history to the newly connected user
     socket.emit("chatHistory", chatHistory);
