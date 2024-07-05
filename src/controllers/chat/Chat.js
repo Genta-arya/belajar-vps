@@ -1,3 +1,4 @@
+import bcrypt from 'bcryptjs';
 import moment from 'moment-timezone';
 
 const chatHistory = []; // In-memory array to store chat messages
@@ -6,6 +7,7 @@ const usersWithUsername = new Set(); // Set to store socket IDs of users with us
 let sessionEndTime = null; // Variable to store session end time
 
 const SESSION_DURATION = 60 * 60 * 1000; // 1 hour session duration in milliseconds
+const SALT_ROUNDS = 10; // Number of salt rounds for bcrypt
 
 export const manageChat = (io) => {
   // Function to reset the session
@@ -76,7 +78,7 @@ export const manageChat = (io) => {
     });
 
     // Log when a message is received and broadcasted
-    socket.on("sendMessage", (messageData) => {
+    socket.on("sendMessage", async (messageData) => {
       const { sender, receiver, message } = messageData;
       console.log(
         "Message received from",
@@ -87,6 +89,9 @@ export const manageChat = (io) => {
         message
       );
 
+      // Encrypt the message
+      const hashedMessage = await bcrypt.hash(message, SALT_ROUNDS);
+
       // Format timestamp in Indonesian time format (24-hour, Jakarta timezone)
       const timestamp = moment().tz('Asia/Jakarta').format('HH:mm');
 
@@ -94,7 +99,7 @@ export const manageChat = (io) => {
       const chatMessage = {
         sender,
         receiver,
-        message,
+        message: hashedMessage, // Store encrypted message
         timestamp, // Add formatted timestamp
       };
       chatHistory.push(chatMessage);
