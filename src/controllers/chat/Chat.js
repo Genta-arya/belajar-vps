@@ -1,9 +1,11 @@
+import moment from 'moment-timezone';
+
 const chatHistory = []; // In-memory array to store chat messages
 const users = new Map(); // Map to store socket IDs and usernames
 const usersWithUsername = new Set(); // Set to store socket IDs of users with usernames
 let sessionEndTime = null; // Variable to store session end time
 
-const SESSION_DURATION = 60 * 60 * 1000; // 10 seconds session duration in milliseconds
+const SESSION_DURATION = 60 * 60 * 1000; // 1 hour session duration in milliseconds
 
 export const manageChat = (io) => {
   // Function to reset the session
@@ -20,8 +22,6 @@ export const manageChat = (io) => {
   }
 
   io.on("connection", (socket) => {
-   
-
     // Send existing chat history to the newly connected user
     socket.emit("chatHistory", chatHistory);
 
@@ -87,11 +87,8 @@ export const manageChat = (io) => {
         message
       );
 
-      // Format timestamp in Indonesian time format (24-hour)
-      const timestamp = new Date().toLocaleTimeString("id-ID", {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
+      // Format timestamp in Indonesian time format (24-hour, Jakarta timezone)
+      const timestamp = moment().tz('Asia/Jakarta').format('HH:mm');
 
       // Store the message in chat history
       const chatMessage = {
