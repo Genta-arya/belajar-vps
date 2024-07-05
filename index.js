@@ -31,7 +31,7 @@ manageChat(io);
 // Rate Limiter Middleware
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 1000, // Limit each IP to 1000 requests per `window` (15 minutes)
+  max: 25, // Limit each IP to 1000 requests per `window` (15 minutes)
   handler: (req, res) => {
     res.status(429).json({
       message: "Too many requests from this IP, please try again later.",

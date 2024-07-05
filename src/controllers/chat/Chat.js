@@ -1,48 +1,22 @@
 const chatHistory = []; // In-memory array to store chat messages
 const users = new Map(); // Map to store socket IDs and usernames
 const usersWithUsername = new Set(); // Set to store socket IDs of users with usernames
-const sessions = new Map(); // Map to store session ID and its end time
+let sessionEndTime = null; // Variable to store session end time
 
-// Constants
-const SESSION_DURATION = 5 * 1000; // 5 seconds session duration in milliseconds
+const SESSION_DURATION = 60 * 60 * 1000; // 10 seconds session duration in milliseconds
 
 export const manageChat = (io) => {
-  // Function to reset the chat data
-  function resetChatData() {
+  // Function to reset the session
+  function resetSession() {
     chatHistory.length = 0; // Clear chat history
     users.clear(); // Clear users
     usersWithUsername.clear(); // Clear usernames
-    sessions.clear(); // Clear sessions
+    sessionEndTime = null; // Reset session end time
     io.emit("chatHistory", chatHistory); // Notify clients
     io.emit("updateUsers", {
       users: [],
       count: 0,
     }); // Notify clients
-  }
-
-  // Function to check and close expired sessions
-  function checkSessions() {
-    const now = Date.now();
-    for (const [socketId, sessionEndTime] of sessions.entries()) {
-      if (now > sessionEndTime) {
-        // Session expired
-        const username = users.get(socketId);
-        if (username) {
-          io.emit("userLeft", username); // Notify all clients that user has left
-        }
-        io.sockets.sockets.get(socketId)?.disconnect(true); // Forcefully disconnect the socket
-        users.delete(socketId);
-        usersWithUsername.delete(socketId);
-        sessions.delete(socketId);
-
-        // Notify all clients about the updated user list and count of users with usernames
-        const updatedUsers = Array.from(usersWithUsername).map((id) => users.get(id));
-        io.emit("updateUsers", {
-          users: updatedUsers,
-          count: usersWithUsername.size,
-        });
-      }
-    }
   }
 
   io.on("connection", (socket) => {
@@ -51,18 +25,28 @@ export const manageChat = (io) => {
     // Send existing chat history to the newly connected user
     socket.emit("chatHistory", chatHistory);
 
-    // Send the list of users to the newly connected user
-    const usersWithUsernameList = Array.from(usersWithUsername).map((id) => users.get(id));
+    // Send the list of users and the number of users with usernames to the newly connected user
+    const currentUsers = Array.from(users.values());
+    const usersWithUsernameList = Array.from(usersWithUsername).map((id) =>
+      users.get(id)
+    );
     socket.emit("updateUsers", {
       users: usersWithUsernameList,
-      count: usersWithUsername.size,
+      count:
+        usersWithUsername.size - (usersWithUsername.has(socket.id) ? 1 : 0),
     });
+
+    // Send the time remaining for the session
+    if (sessionEndTime) {
+      const timeRemaining = Math.max(sessionEndTime - Date.now(), 0);
+      socket.emit("timeRemaining", timeRemaining);
+    }
 
     // Handle the username set by the user
     socket.on("setUsername", (username) => {
       // Check if the username is already taken
       if (Array.from(users.values()).includes(username)) {
-        socket.emit("usernameError", "Username already taken");
+        socket.emit("usernameError", "Username sudah digunakan");
         return;
       }
 
@@ -71,38 +55,57 @@ export const manageChat = (io) => {
       usersWithUsername.add(socket.id);
       console.log("Username set:", username);
 
-      // Set session for the user
-      const sessionEndTime = Date.now() + SESSION_DURATION;
-      sessions.set(socket.id, sessionEndTime);
-
-      // Notify all clients about the updated user list
-      const updatedUsers = Array.from(usersWithUsername).map((id) => users.get(id));
+      // Notify all clients about the updated user list and count of users with usernames
+      const updatedUsers = Array.from(usersWithUsername).map((id) =>
+        users.get(id)
+      );
       io.emit("updateUsers", {
         users: updatedUsers,
-        count: usersWithUsername.size,
+        count:
+          usersWithUsername.size - (usersWithUsername.has(socket.id) ? 1 : 0),
       });
 
       // Notify all clients that a new user has joined
       socket.broadcast.emit("userJoined", username);
 
-      // Notify the user of their session end time
-      socket.emit("sessionEndTime", sessionEndTime);
+      // Set or reset the session end time
+      if (!sessionEndTime || sessionEndTime < Date.now()) {
+        sessionEndTime = Date.now() + SESSION_DURATION;
+        io.emit("timeRemaining", SESSION_DURATION); // Notify all clients
+      }
     });
 
-    // Handle incoming messages
+    // Log when a message is received and broadcasted
     socket.on("sendMessage", (messageData) => {
       const { sender, receiver, message } = messageData;
-      console.log("Message received from", sender, "to", receiver, ":", message);
+      console.log(
+        "Message received from",
+        sender,
+        "to",
+        receiver,
+        ":",
+        message
+      );
 
+      // Format timestamp in Indonesian time format (24-hour)
       const timestamp = new Date().toLocaleTimeString("id-ID", {
         hour: "2-digit",
         minute: "2-digit",
       });
 
-      const chatMessage = { sender, receiver, message, timestamp };
+      // Store the message in chat history
+      const chatMessage = {
+        sender,
+        receiver,
+        message,
+        timestamp, // Add formatted timestamp
+      };
       chatHistory.push(chatMessage);
 
+      // Broadcast the message to all clients
       io.emit("receiveMessage", chatMessage);
+
+      // Log the updated chat history
       console.log("Updated chat history:", chatHistory);
     });
 
@@ -112,47 +115,39 @@ export const manageChat = (io) => {
       const username = users.get(socket.id); // Get username of the disconnected user
       users.delete(socket.id);
       usersWithUsername.delete(socket.id);
-      sessions.delete(socket.id); // Remove the session
 
       // Notify all clients about the updated user list and count of users with usernames
-      const updatedUsers = Array.from(usersWithUsername).map((id) => users.get(id));
+      const updatedUsers = Array.from(usersWithUsername).map((id) =>
+        users.get(id)
+      );
       io.emit("updateUsers", {
         users: updatedUsers,
-        count: usersWithUsername.size,
+        count:
+          usersWithUsername.size - (usersWithUsername.has(socket.id) ? 1 : 0),
       });
 
       // Notify all clients that a user has left
       if (username) {
-        io.emit("userLeft", username);
+        io.emit("userLeft", username); // Send the username of the user who left
       }
 
-      // If no users are left, reset chat data
+      // If no users are left, clear the session
       if (users.size === 0) {
-        resetChatData();
+        resetSession();
       }
     });
 
-    // Handle periodic session validation
-    socket.on("validateSession", () => {
-      const sessionEndTime = sessions.get(socket.id);
-      if (sessionEndTime && Date.now() > sessionEndTime) {
-        socket.emit("sessionExpired", "Session has expired");
-        users.delete(socket.id);
-        usersWithUsername.delete(socket.id);
-        sessions.delete(socket.id);
-
-        // Notify all clients about the updated user list and count of users with usernames
-        const updatedUsers = Array.from(usersWithUsername).map((id) => users.get(id));
-        io.emit("updateUsers", {
-          users: updatedUsers,
-          count: usersWithUsername.size,
-        });
+    // Periodically check for session expiration
+    setInterval(() => {
+      if (sessionEndTime && Date.now() >= sessionEndTime) {
+        io.emit("sessionExpired", "Session has expired");
+        resetSession();
+      } else if (sessionEndTime) {
+        const timeRemaining = Math.max(sessionEndTime - Date.now(), 0);
+        io.emit("timeRemaining", timeRemaining);
       }
-    });
+    }, 1000); // Check every second
   });
-
-  // Periodically check sessions
-  setInterval(checkSessions, 5 * 1000); // Check every minute
 };
 
 // Controller function to handle HTTP requests for chat history
