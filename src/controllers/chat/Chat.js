@@ -1,5 +1,5 @@
-import crypto from 'crypto';
-import moment from 'moment-timezone';
+import crypto from "crypto";
+import moment from "moment-timezone";
 
 const chatHistory = []; // In-memory array to store chat messages
 const users = new Map(); // Map to store socket IDs and usernames
@@ -13,18 +13,26 @@ const IV_LENGTH = 16; // Length of initialization vector for AES
 // Function to encrypt a message
 function encryptMessage(message) {
   const iv = crypto.randomBytes(IV_LENGTH);
-  const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(ENCRYPTION_KEY), iv);
+  const cipher = crypto.createCipheriv(
+    "aes-256-cbc",
+    Buffer.from(ENCRYPTION_KEY),
+    iv
+  );
   let encrypted = cipher.update(message);
   encrypted = Buffer.concat([encrypted, cipher.final()]);
-  return iv.toString('hex') + ':' + encrypted.toString('hex');
+  return iv.toString("hex") + ":" + encrypted.toString("hex");
 }
 
 // Function to decrypt a message
 function decryptMessage(encryptedMessage) {
-  const textParts = encryptedMessage.split(':');
-  const iv = Buffer.from(textParts.shift(), 'hex');
-  const encryptedText = Buffer.from(textParts.join(':'), 'hex');
-  const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(ENCRYPTION_KEY), iv);
+  const textParts = encryptedMessage.split(":");
+  const iv = Buffer.from(textParts.shift(), "hex");
+  const encryptedText = Buffer.from(textParts.join(":"), "hex");
+  const decipher = crypto.createDecipheriv(
+    "aes-256-cbc",
+    Buffer.from(ENCRYPTION_KEY),
+    iv
+  );
   let decrypted = decipher.update(encryptedText);
   decrypted = Buffer.concat([decrypted, decipher.final()]);
   return decrypted.toString();
@@ -46,10 +54,13 @@ export const manageChat = (io) => {
 
   io.on("connection", (socket) => {
     // Send existing chat history to the newly connected user
-    socket.emit("chatHistory", chatHistory.map(message => ({
-      ...message,
-      message: decryptMessage(message.message) // Decrypt messages before sending to client
-    })));
+    socket.emit(
+      "chatHistory",
+      chatHistory.map((message) => ({
+        ...message,
+        message: decryptMessage(message.message), // Decrypt messages before sending to client
+      }))
+    );
 
     // Send the list of users and the number of users with usernames to the newly connected user
     const currentUsers = Array.from(users.values());
@@ -117,7 +128,7 @@ export const manageChat = (io) => {
       const encryptedMessage = encryptMessage(message);
 
       // Format timestamp in Indonesian time format (24-hour, Jakarta timezone)
-      const timestamp = moment().tz('Asia/Jakarta').format('HH:mm');
+      const timestamp = moment().tz("Asia/Jakarta").format("HH:mm");
 
       // Store the message in chat history
       const chatMessage = {
@@ -131,7 +142,7 @@ export const manageChat = (io) => {
       // Broadcast the message to all clients
       io.emit("receiveMessage", {
         ...chatMessage,
-        message: message // Send the plain message to clients
+        message: message, // Send the plain message to clients
       });
 
       // Log the updated chat history
@@ -180,10 +191,8 @@ export const manageChat = (io) => {
 };
 
 // Controller function to handle HTTP requests for chat history
+// Controller function to handle HTTP requests for chat history
 export const getChatHistory = (req, res) => {
-  console.log("Chat history requested");
-  res.json(chatHistory.map(message => ({
-    ...message,
-    message: decryptMessage(message.message) // Decrypt messages before sending to HTTP response
-  })));
+  
+  res.json(chatHistory); // Return encrypted messages
 };
