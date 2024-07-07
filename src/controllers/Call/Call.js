@@ -67,8 +67,8 @@ export const HandleCall = (io) => {
         socket.to(toSocketId).emit('user-disconnected', { username });
         console.log(`User disconnected: ${username} (call with ${users.get(toSocketId)})`);
         ongoingCalls.delete(toSocketId);
+        ongoingCalls.delete(socket.id);
       }
-      ongoingCalls.delete(socket.id);
     };
 
     socket.on('disconnect', () => {
