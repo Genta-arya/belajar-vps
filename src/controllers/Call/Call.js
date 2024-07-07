@@ -56,7 +56,7 @@ export const HandleCall = (io) => {
     });
 
     // Handle user disconnect
-    socket.on('user-disconnect', () => {
+    const handleDisconnect = () => {
       const username = users.get(socket.id);
       users.delete(socket.id);
       io.emit('update-users', Array.from(users.values()));
@@ -69,12 +69,13 @@ export const HandleCall = (io) => {
         ongoingCalls.delete(toSocketId);
       }
       ongoingCalls.delete(socket.id);
-    });
+    };
 
     socket.on('disconnect', () => {
       console.log('Client disconnected');
-      // Handle disconnection and remove ongoing calls
-      socket.emit('user-disconnect');
+      handleDisconnect();
     });
+
+    socket.on('user-disconnect', handleDisconnect);
   });
 };
