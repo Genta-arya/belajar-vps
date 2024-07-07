@@ -12,6 +12,7 @@ import jwt from "jsonwebtoken";
 import prisma from "./Config/Prisma.js";
 import routerChat from "./src/routes/chat/ChatRoute.js";
 import { manageChat } from "./src/controllers/chat/Chat.js";
+import { HandleCall } from "./src/controllers/Call/Call.js";
 
 // Create Express application
 const app = express();
@@ -27,6 +28,7 @@ const io = new SocketIOServer(httpServer, {
   },
 });
 manageChat(io);
+HandleCall(io)
 
 // Rate Limiter Middleware
 const limiter = rateLimit({
